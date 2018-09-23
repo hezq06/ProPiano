@@ -30,9 +30,11 @@ class VirPiano(object):
 
     def run(self):
         Cont=True
+        rec=[0, 600, 1024, 64]
         while Cont:
             # self.draw_piano()
-            self.draw_piano()
+            self.screen.fill((BLACK))
+            self.draw_piano(rec=rec)
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -42,8 +44,25 @@ class VirPiano(object):
                     if event.key == pygame.K_ESCAPE:
                         pygame.quit()
                         Cont=False
+                    elif event.key == pygame.K_UP:
+                        rec[1]=rec[1]-1
+                    elif event.key == pygame.K_DOWN:
+                        rec[1]=rec[1]+1
+                    elif event.key == pygame.K_LEFT:
+                        rec[0]=rec[0]-1
+                    elif event.key == pygame.K_RIGHT:
+                        rec[0]=rec[0]+1
+                    elif event.key == pygame.K_a:
+                        rec[2]=rec[2]-1
+                    elif event.key == pygame.K_d:
+                        rec[2]=rec[2]+1
+                    elif event.key == pygame.K_s:
+                        rec[3]=rec[3]-1
+                    elif event.key == pygame.K_w:
+                        rec[3]=rec[3]+1
 
-    def draw_piano(self,rec=[0, 600, 1024, 64]):
+
+    def draw_piano(self,rec=[0, 600, 1024, 64],gkey=[20]):
         # Drawing main keys
         pygame.draw.rect(self.screen, WHITE, rec)
         xs=rec[0]
@@ -57,7 +76,13 @@ class VirPiano(object):
         psubkind=[0,1,3,4,5]
         psubkposi=[-2/3,-1/3,-2/3,-1/2,-1/3]
         for kn in range(52):
-            pygame.draw.rect(self.screen, GBLACK, [int(xs),ys,int(xs+keyW)-int(xs),keyL],1)
+            if kn in gkey:
+                pygame.draw.rect(self.screen, GREEN, [int(xs),ys,int(xs+keyW)-int(xs),keyL])
+            else:
+                pygame.draw.rect(self.screen, GBLACK, [int(xs),ys,int(xs+keyW)-int(xs),keyL],1)
+            xs=xs+keyW
+        xs=rec[0]
+        for kn in range(52):
             spind=(kn-2)%7
             if spind in psubkind and kn<51:
                 skind=psubkind.index(spind)

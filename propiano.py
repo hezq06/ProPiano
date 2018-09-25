@@ -17,6 +17,8 @@ class VirPiano(object):
     """
     def __init__(self):
         self.screen = None
+        self.kposidict=dict([])
+        self.fclock=pygame.time.Clock()
         self.init_window()
 
     def init_window(self):
@@ -31,10 +33,13 @@ class VirPiano(object):
     def run(self):
         Cont=True
         rec=[0, 600, 1024, 64]
+        sposi=0
         while Cont:
-            # self.draw_piano()
             self.screen.fill((BLACK))
             self.draw_piano(rec=rec)
+            if sposi-100<self.kposidict["ll"]:
+                self.draw_note(20,sposi,100)
+            sposi=sposi+1
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -60,11 +65,14 @@ class VirPiano(object):
                         rec[3]=rec[3]-1
                     elif event.key == pygame.K_w:
                         rec[3]=rec[3]+1
+            self.fclock.tick(120)
 
 
     def draw_piano(self,rec=[0, 600, 1024, 64],gkey=[20]):
         # Drawing main keys
         pygame.draw.rect(self.screen, WHITE, rec)
+        pygame.draw.rect(self.screen, WHITE, [rec[0],rec[1]-10,rec[2],2])
+        self.kposidict["ll"]=rec[1]-10
         xs=rec[0]
         ys=rec[1]
         totL=rec[2]
@@ -80,6 +88,7 @@ class VirPiano(object):
                 pygame.draw.rect(self.screen, GREEN, [int(xs),ys,int(xs+keyW)-int(xs),keyL])
             else:
                 pygame.draw.rect(self.screen, GBLACK, [int(xs),ys,int(xs+keyW)-int(xs),keyL],1)
+            self.kposidict[kn]=[int(xs),ys,int(xs+keyW)-int(xs),keyL]
             xs=xs+keyW
         xs=rec[0]
         for kn in range(52):
@@ -88,3 +97,12 @@ class VirPiano(object):
                 skind=psubkind.index(spind)
                 pygame.draw.rect(self.screen, GBLACK, [int(xs+keyW+psubkposi[skind]*skeyW),ys,skeyW,skeyL])
             xs=xs+keyW
+
+    def draw_note(self,note,start,length):
+        # Draw a bar of note
+        kposi=self.kposidict[note]
+        ll=self.kposidict["ll"]
+        if start<ll:
+            pygame.draw.rect(self.screen, GREEN, [kposi[0],start-length,kposi[2],length])
+        else:
+            pygame.draw.rect(self.screen, GREEN, [kposi[0],start-length,kposi[2],ll-(start-length)])

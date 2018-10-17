@@ -3,6 +3,10 @@ __author__ = 'harry'
 import pygame
 from pygame.locals import *
 
+import music21 as mu
+mu.environment.set("musicxmlPath", "C:\\Program Files (x86)\\MuseScore 2\\bin\\MuseScore.exe")
+mu.environment.set('musescoreDirectPNGPath', "C:\\Program Files (x86)\\MuseScore 2\\bin\\MuseScore.exe")
+
 BLACK = (0, 0, 0)
 GBLACK = (50, 50, 50)
 WHITE = (255, 255, 255)
@@ -106,3 +110,63 @@ class VirPiano(object):
             pygame.draw.rect(self.screen, GREEN, [kposi[0],start-length,kposi[2],length])
         else:
             pygame.draw.rect(self.screen, GREEN, [kposi[0],start-length,kposi[2],ll-(start-length)])
+
+class MusicParser(object):
+    """
+    Main class for music parsing
+    """
+    def __init__(self,file="music\\Final_Fantasy_Main_Theme.musicxml",format='musicxml'):
+        """
+        Initiation
+        """
+        # file="music\\Wings_of_Piano.mxl"
+        file="music\\Deemo_Anima-Xi.mxl"
+        # file="music\\Necrofantasia_Yukaris_Theme_Touhou.mxl"
+        self.muf=mu.converter.parse(file,format=format)
+        self.mups=None
+
+    def show(self):
+        self.muf.show()
+
+    def play(self):
+        # ff=mu.converter.parse("music\\Final_Fantasy_Main_Theme.musicxml",format='musicxml')
+        self.muf.show("midi")
+
+    def get_parts(self):
+        mups = self.muf.parts.stream()
+        print("Number of parts: ",len(mups))
+        self.mups=mups
+
+    def get_instruments(self):
+        if self.mups is None:
+            self.get_parts()
+        for pt in self.mups:
+            if isinstance(pt[0],mu.instrument.Instrument):
+                print(pt[0])
+                # print(pt[0].instrumentName)
+
+    def get_measures(self,part=0):
+        if self.mups is None:
+            self.get_parts()
+        msl=[]
+        for ms in self.mups[part]:
+            if isinstance(ms,mu.stream.Measure):
+                # print(ms,ms.barDuration)
+                msl.append(ms)
+        return msl
+
+    def get_timed_nots(self,ms):
+        """
+        Get timed notes list from a measure [note,start_t,end_t]
+        """
+
+if __name__=='__main__':
+    mp=MusicParser()
+    # mp.play()
+    msl=mp.get_measures(part=0)
+    mid=0
+    print(msl[mid],len(msl[mid]))
+    for item in msl[mid]:
+        print(item)
+    mp.show()
+

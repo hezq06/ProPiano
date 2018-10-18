@@ -155,18 +155,40 @@ class MusicParser(object):
                 msl.append(ms)
         return msl
 
-    def get_timed_nots(self,ms):
+    def get_timed_notes(self,ms, poffset=0):
         """
         Get timed notes list from a measure [note,start_t,end_t]
         """
+        notel=[]
+        offset=ms.offset
+        cpointer=0
+        for item in ms:
+            if isinstance(item,mu.stream.Voice):
+                notesl1=self.get_timed_notes(item,poffset=offset)
+                notel.append(notesl1)
+            elif isinstance(item,mu.note.Note):
+                notel.append((item.nameWithOctave,offset+poffset+cpointer,offset+poffset+cpointer+item.quarterLength))
+                cpointer=cpointer+item.quarterLength
+            elif isinstance(item,mu.chord.Chord):
+                for iitem in item:
+                    notel.append((iitem.nameWithOctave,offset+poffset+cpointer,offset+poffset+cpointer+iitem.quarterLength))
+                cpointer=cpointer+item.quarterLength
+        return notel
 
 if __name__=='__main__':
     mp=MusicParser()
     # mp.play()
     msl=mp.get_measures(part=0)
-    mid=0
-    print(msl[mid],len(msl[mid]))
-    for item in msl[mid]:
-        print(item)
-    mp.show()
+    for ms in msl:
+        ntl=mp.get_timed_notes(ms)
+        print(ntl)
+    # mid=1
+    # print(msl[mid],len(msl[mid]))
+    # for item in msl[mid]:
+    #     print(item)
+    # mp.show()
+
+    vp=VirPiano()
+    vp.run()
+
 

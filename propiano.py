@@ -39,24 +39,36 @@ class VirPiano(object):
         """
         calculate pressed key number from beat counter and timed note list
         """
-        active_keyl=[]
-        for item in timed_note_list:
-            if item[1]<=beatc and item[2]>beatc:
-                # active_keyl.append(self.key_name2id(item[0]))
-                pass
-        return False
+        if type(timed_note_list[0]) is list:
+            assert len(timed_note_list)==2 # Only accepting 2 parts (left hand and right hand)
+            active_keyl1=[]
+            for item in timed_note_list[0]:
+                if item[1]<=beatc and item[2]>beatc:
+                    active_keyl1.append(self.key_name2id[item[0]])
+            active_keyl2=[]
+            for item in timed_note_list[1]:
+                if item[1]<=beatc and item[2]>beatc:
+                    active_keyl2.append(self.key_name2id[item[0]])
+            return [active_keyl1,active_keyl2]
+        else:
+            active_keyl=[]
+            for item in timed_note_list:
+                if item[1]<=beatc and item[2]>beatc:
+                    active_keyl.append(self.key_name2id[item[0]])
+            return active_keyl
 
 
-    def run(self,timed_note_list):
+    def run(self,timed_note_list,beatpsec=2.0,colorlist=[GREEN,RED]):
         Cont=True
         rec=[0, 600, 1024, 64]
+        active_note_id=[None]
         sposi=0
-        secpbeat=1.0 # secpbeat
+        beatpsec=beatpsec # secpbeat
         beatc=0 # beat counter
         frate=120 # frame per second
         while Cont:
             self.screen.fill((BLACK))
-            self.draw_piano(rec=rec)
+            self.draw_piano(rec=rec,active_note_id=active_note_id,colorlist=colorlist)
             active_note_id=self.get_pressed_key(timed_note_list,beatc)
             if sposi-100<self.kposidict["ll"]:
                 self.draw_note(20,sposi,100)
@@ -86,7 +98,7 @@ class VirPiano(object):
                         rec[3]=rec[3]-1
                     elif event.key == pygame.K_w:
                         rec[3]=rec[3]+1
-            beatc=beatc+1/frate*secpbeat
+            beatc=beatc+1/frate*beatpsec
             self.fclock.tick(frate)
 
     def build_piano(self,rec=None):
@@ -110,75 +122,109 @@ class VirPiano(object):
                 xs=xs+keyW
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==1:
                 psubkpt=-1
                 keyName="A#"+str(prdnum)
                 keyrec=[int(xs+psubkposi[psubkpt]*skeyW),ys,skeyW,skeyL]
+                psubkpt=psubkpt+1
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
-                psubkpt=psubkpt+1
+                self.key_name2id[keyName]=nn
+                keyName="B-"+str(prdnum)
+                self.kposidict[keyName]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==2:
                 keyName="B"+str(prdnum)
                 keyrec=[int(xs),ys,int(xs+keyW)-int(xs),keyL]
                 xs=xs+keyW
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==3:
                 keyName="C"+str(prdnum)
                 keyrec=[int(xs),ys,int(xs+keyW)-int(xs),keyL]
                 xs=xs+keyW
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==4:
                 keyName="C#"+str(prdnum)
                 keyrec=[int(xs+psubkposi[psubkpt]*skeyW),ys,skeyW,skeyL]
+                psubkpt=psubkpt+1
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
-                psubkpt=psubkpt+1
+                self.key_name2id[keyName]=nn
+                keyName="D-"+str(prdnum)
+                self.kposidict[keyName]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==5:
                 keyName="D"+str(prdnum)
                 keyrec=[int(xs),ys,int(xs+keyW)-int(xs),keyL]
                 xs=xs+keyW
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==6:
                 keyName="D#"+str(prdnum)
                 keyrec=[int(xs+psubkposi[psubkpt]*skeyW),ys,skeyW,skeyL]
+                psubkpt=psubkpt+1
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
-                psubkpt=psubkpt+1
+                self.key_name2id[keyName]=nn
+                keyName="E-"+str(prdnum)
+                self.kposidict[keyName]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==7:
                 keyName="E"+str(prdnum)
                 keyrec=[int(xs),ys,int(xs+keyW)-int(xs),keyL]
                 xs=xs+keyW
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==8:
                 keyName="F"+str(prdnum)
                 keyrec=[int(xs),ys,int(xs+keyW)-int(xs),keyL]
                 xs=xs+keyW
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
+                self.key_name2id[keyName]=nn
+                keyName="E#"+str(prdnum)
+                self.kposidict[keyName]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==9:
                 keyName="F#"+str(prdnum)
                 keyrec=[int(xs+psubkposi[psubkpt]*skeyW),ys,skeyW,skeyL]
+                psubkpt=psubkpt+1
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
-                psubkpt=psubkpt+1
+                self.key_name2id[keyName]=nn
+                keyName="G-"+str(prdnum)
+                self.kposidict[keyName]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==10:
                 keyName="G"+str(prdnum)
                 keyrec=[int(xs),ys,int(xs+keyW)-int(xs),keyL]
                 xs=xs+keyW
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
+                self.key_name2id[keyName]=nn
+                keyName="F##"+str(prdnum)
+                self.kposidict[keyName]=keyrec
+                self.key_name2id[keyName]=nn
             elif nn % 12==11:
                 keyName="G#"+str(prdnum)
                 keyrec=[int(xs+psubkposi[psubkpt]*skeyW),ys,skeyW,skeyL]
+                psubkpt=psubkpt+1
                 self.kposidict[keyName]=keyrec
                 self.kposidict[nn]=keyrec
-                psubkpt=psubkpt+1
+                self.key_name2id[keyName]=nn
+                keyName="A-"+str(prdnum)
+                self.kposidict[keyName]=keyrec
+                self.key_name2id[keyName]=nn
 
-    def draw_piano(self,rec=[0, 600, 1024, 64],gkey=[20]):
+
+    def draw_piano(self,rec=[0, 600, 1024, 64],active_note_id=[],colorlist=[]):
         # Drawing main keys
         self.build_piano(rec=rec) ##### Refactor here
         pygame.draw.rect(self.screen, WHITE, rec)
@@ -186,10 +232,32 @@ class VirPiano(object):
         self.kposidict["ll"]=rec[1]-10
         for nn in range(88):
             rec=self.kposidict[nn]
-            if nn%12 in [0,2,3,5,7,8,10]:
+            if nn%12 in [0,2,3,5,7,8,10]: # Main key
+                if type(active_note_id[0]) is list:
+                    if nn in active_note_id[0]:
+                        pygame.draw.rect(self.screen, RED, rec)
+                    elif nn in active_note_id[1]:
+                        pygame.draw.rect(self.screen, GREEN, rec)
+                else:
+                    if nn in active_note_id:
+                        pygame.draw.rect(self.screen, GREEN, rec)
                 pygame.draw.rect(self.screen, GBLACK, rec,1)
-            else:
+
+
+        for nn in range(88):
+            rec=self.kposidict[nn]
+            if nn%12 not in [0,2,3,5,7,8,10]: # Small key
                 pygame.draw.rect(self.screen, GBLACK, rec)
+                if type(active_note_id[0]) is list:
+                    if nn in active_note_id[0]:
+                            pygame.draw.rect(self.screen, RED, rec)
+                            pygame.draw.rect(self.screen, GBLACK, rec,1)
+                    elif nn in active_note_id[1]:
+                            pygame.draw.rect(self.screen, GREEN, rec)
+                            pygame.draw.rect(self.screen, GBLACK, rec,1)
+                elif nn in active_note_id:
+                        pygame.draw.rect(self.screen, GREEN, rec)
+                        pygame.draw.rect(self.screen, GBLACK, rec,1)
 
     def draw_note(self,note,start,length):
         # Draw a bar of note
@@ -272,6 +340,12 @@ if __name__=='__main__':
     for ms in msl:
         ntl=mp.get_timed_notes(ms)
         tntl=tntl+ntl
+
+    ms2=mp.get_measures(part=1)
+    tnt2=[]
+    for ms in ms2:
+        ntl=mp.get_timed_notes(ms)
+        tnt2=tnt2+ntl
     # mid=1
     # print(msl[mid],len(msl[mid]))
     # for item in msl[mid]:
@@ -279,6 +353,6 @@ if __name__=='__main__':
     # mp.show()
 
     vp=VirPiano()
-    vp.run(tntl)
+    vp.run([tntl,tnt2],beatpsec=30.0)
 
 

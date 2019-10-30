@@ -14,6 +14,34 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
+def cal_trapezoid(glb_rec,rec,trapezoid):
+    """
+    Calculate polygon from glb_rec rec and trapezoid
+    :param glb_rec: global rec [left, top, width, height]
+    :param rec: target rec
+    :param trapezoid: trapezoid index
+    :return: polygon [(points),...]
+    """
+
+    gp_lt=(glb_rec[0],glb_rec[1])
+    gp_rt=(glb_rec[0]+glb_rec[2],glb_rec[1])
+    gp_ld=(glb_rec[0],glb_rec[1]+glb_rec[3])
+    gp_rd=(glb_rec[0]+glb_rec[2],glb_rec[1]+glb_rec[3])
+
+    p_lt=(rec[0],rec[1])
+    p_rt=(rec[0]+rec[2],rec[1])
+    p_ld=(rec[0],rec[1]+rec[3])
+    p_rd=(rec[0]+rec[2],rec[1]+rec[3])
+
+    shk_up=(gp_ld[1]-p_lt[1])/glb_rec[3]*(1-trapezoid)+trapezoid
+    shk_dw=(gp_ld[1]-p_ld[1])/glb_rec[3]*(1-trapezoid)+trapezoid
+
+    res_lt=((gp_lt[0]+gp_rt[0])/2-((gp_lt[0]+gp_rt[0])/2-p_lt[0])*shk_up,p_lt[1])
+    res_rt=((gp_lt[0]+gp_rt[0])/2-((gp_lt[0]+gp_rt[0])/2-p_rt[0])*shk_up,p_rt[1])
+    res_ld=((gp_ld[0]+gp_rd[0])/2-((gp_ld[0]+gp_rd[0])/2-p_ld[0])*shk_dw,p_ld[1])
+    res_rd=((gp_ld[0]+gp_rd[0])/2-((gp_ld[0]+gp_rd[0])/2-p_rd[0])*shk_dw,p_rd[1])
+
+    return [res_lt,res_rt,res_rd,res_ld]
 
 class VirPiano(object):
     """
@@ -34,6 +62,7 @@ class VirPiano(object):
         pygame.init()
         display=(1024,768)
         self.screen = pygame.display.set_mode(display, pygame.FULLSCREEN)
+        # self.screen = pygame.display.set_mode(display)
 
     def get_pressed_key(self, timed_note_list, beatc):
         """
@@ -60,15 +89,15 @@ class VirPiano(object):
 
     def run(self,timed_note_list,beatpsec=2.0,colorlist=[GREEN,RED]):
         Cont=True
-        rec=[0, 600, 1024, 64]
+        glb_rec=[0, 600, 1024, 64]
         active_note_id=[None]
         sposi=0
         beatpsec=beatpsec # secpbeat
         beatc=0 # beat counter
-        frate=120 # frame per second
+        frate=60 # frame per second
         while Cont:
             self.screen.fill((BLACK))
-            self.draw_piano(rec=rec,active_note_id=active_note_id,colorlist=colorlist)
+            self.draw_piano(glb_rec=glb_rec,active_note_id=active_note_id,colorlist=colorlist,trapezoid=0.8)
             active_note_id=self.get_pressed_key(timed_note_list,beatc)
             if sposi-100<self.kposidict["ll"]:
                 self.draw_note(20,sposi,100)
@@ -83,21 +112,21 @@ class VirPiano(object):
                         pygame.quit()
                         Cont=False
                     elif event.key == pygame.K_UP:
-                        rec[1]=rec[1]-1
+                        glb_rec[1]=glb_rec[1]-1
                     elif event.key == pygame.K_DOWN:
-                        rec[1]=rec[1]+1
+                        glb_rec[1]=glb_rec[1]+1
                     elif event.key == pygame.K_LEFT:
-                        rec[0]=rec[0]-1
+                        glb_rec[0]=glb_rec[0]-1
                     elif event.key == pygame.K_RIGHT:
-                        rec[0]=rec[0]+1
+                        glb_rec[0]=glb_rec[0]+1
                     elif event.key == pygame.K_a:
-                        rec[2]=rec[2]-1
+                        glb_rec[2]=glb_rec[2]-1
                     elif event.key == pygame.K_d:
-                        rec[2]=rec[2]+1
+                        glb_rec[2]=glb_rec[2]+1
                     elif event.key == pygame.K_s:
-                        rec[3]=rec[3]-1
+                        glb_rec[3]=glb_rec[3]-1
                     elif event.key == pygame.K_w:
-                        rec[3]=rec[3]+1
+                        glb_rec[3]=glb_rec[3]+1
             beatc=beatc+1/frate*beatpsec
             self.fclock.tick(frate)
 
@@ -224,40 +253,68 @@ class VirPiano(object):
                 self.key_name2id[keyName]=nn
 
 
-    def draw_piano(self,rec=[0, 600, 1024, 64],active_note_id=[],colorlist=[]):
+    def draw_piano(self,glb_rec=[0, 600, 1024, 64],active_note_id=[],colorlist=[],trapezoid=1.0):
         # Drawing main keys
-        self.build_piano(rec=rec) ##### Refactor here
-        pygame.draw.rect(self.screen, WHITE, rec)
-        pygame.draw.rect(self.screen, WHITE, [rec[0],rec[1]-10,rec[2],2])
-        self.kposidict["ll"]=rec[1]-10
+        self.build_piano(rec=glb_rec) ##### Refactor here
+        # pygame.draw.rect(self.screen, WHITE, glb_rec)
+        polys=cal_trapezoid(glb_rec,glb_rec,trapezoid)
+        pygame.draw.polygon(self.screen, WHITE, polys)
+
+        pygame.draw.rect(self.screen, WHITE, [glb_rec[0],glb_rec[1]-10,glb_rec[2],2])
+        # polys=cal_trapezoid(glb_rec,[glb_rec[0],glb_rec[1]-10,glb_rec[2],2],trapezoid)
+        # pygame.draw.polygon(self.screen, WHITE, polys)
+
+        self.kposidict["ll"]=glb_rec[1]-10
         for nn in range(88):
             rec=self.kposidict[nn]
             if nn%12 in [0,2,3,5,7,8,10]: # Main key
                 if type(active_note_id[0]) is list:
                     if nn in active_note_id[0]:
-                        pygame.draw.rect(self.screen, RED, rec)
+                        # pygame.draw.rect(self.screen, RED, rec)
+                        polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                        pygame.draw.polygon(self.screen, RED, polys)
                     elif nn in active_note_id[1]:
-                        pygame.draw.rect(self.screen, GREEN, rec)
+                        # pygame.draw.rect(self.screen, GREEN, rec)
+                        polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                        pygame.draw.polygon(self.screen, GREEN, polys)
                 else:
                     if nn in active_note_id:
-                        pygame.draw.rect(self.screen, GREEN, rec)
-                pygame.draw.rect(self.screen, GBLACK, rec,1)
-
+                        # pygame.draw.rect(self.screen, GREEN, rec)
+                        polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                        pygame.draw.polygon(self.screen, GREEN, polys)
+                # pygame.draw.rect(self.screen, GBLACK, rec,1)
+                polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                pygame.draw.polygon(self.screen, GBLACK, polys,1)
 
         for nn in range(88):
             rec=self.kposidict[nn]
             if nn%12 not in [0,2,3,5,7,8,10]: # Small key
-                pygame.draw.rect(self.screen, GBLACK, rec)
+                # pygame.draw.rect(self.screen, GBLACK, rec)
+                polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                pygame.draw.polygon(self.screen, GBLACK, polys)
                 if type(active_note_id[0]) is list:
                     if nn in active_note_id[0]:
-                            pygame.draw.rect(self.screen, RED, rec)
-                            pygame.draw.rect(self.screen, GBLACK, rec,1)
+                        # pygame.draw.rect(self.screen, RED, rec)
+                        polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                        pygame.draw.polygon(self.screen, RED, polys)
+                        # pygame.draw.rect(self.screen, GBLACK, rec,1)
+                        polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                        pygame.draw.polygon(self.screen, GBLACK, polys)
                     elif nn in active_note_id[1]:
-                            pygame.draw.rect(self.screen, GREEN, rec)
-                            pygame.draw.rect(self.screen, GBLACK, rec,1)
+                        # pygame.draw.rect(self.screen, GREEN, rec)
+                        polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                        pygame.draw.polygon(self.screen, GREEN, polys)
+                        # pygame.draw.rect(self.screen, GBLACK, rec,1)
+                        polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                        pygame.draw.polygon(self.screen, GBLACK, polys)
+
                 elif nn in active_note_id:
-                        pygame.draw.rect(self.screen, GREEN, rec)
-                        pygame.draw.rect(self.screen, GBLACK, rec,1)
+                    # pygame.draw.rect(self.screen, GREEN, rec)
+                    polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                    pygame.draw.polygon(self.screen, GREEN, polys)
+                    # pygame.draw.rect(self.screen, GBLACK, rec,1)
+                    polys=cal_trapezoid(glb_rec,rec,trapezoid)
+                    pygame.draw.polygon(self.screen, GBLACK, polys,1)
 
     def draw_note(self,note,start,length):
         # Draw a bar of note
@@ -353,6 +410,6 @@ if __name__=='__main__':
     # mp.show()
 
     vp=VirPiano()
-    vp.run([tntl,tnt2],beatpsec=30.0)
+    vp.run([tntl,tnt2],beatpsec=2.0)
 
 
